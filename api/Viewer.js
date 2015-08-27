@@ -245,147 +245,52 @@ BIMSURFER.Viewer = BIMSURFER.Class({
 		}, lastDown);
 		this.events.register('mouseUp', function(e) {
 			if(((e.offsetX > this.x) ? (e.offsetX - this.x < 5) : (this.x - e.offsetX < 5)) &&	((e.offsetY > this.y) ? (e.offsetY - this.y < 5) : (this.y - e.offsetY < 5))) {
-				this.scene.pick(this.x, this.y, {rayPick: true});
+				var hit = this.scene.pick(this.x, this.y, {rayPick: true});
+
+				testFunction(hit.nodeId);
+
+				if(hit != null){
+					var sceneNode = viewer.scene.findNode(hit.nodeId);
+					if(sceneNode != null){
+						sceneNode.nodeId = sceneNode.id;
+						viewer.getControl("BIMSURFER.Control.ClickSelect").pick(sceneNode);
+					}
+				}
 
                 /* Set the object data to the div */
-                if(selectedNode != null){
-                    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
-                        var obj = jsonTree['core']['data'][i];
-                        if(selectedNode == obj.id){
-                            /* TO DO open only once  */
-							$("#tenant").dialog("open");
-							var div = $('#tenant_details');
-							div.empty();
-
-							for (var key in jsonData['core']['data'][i]) {
-								if (jsonData['core']['data'][i].hasOwnProperty(key)) {
-									div.append('<p>'+ key + ' -> '+ jsonData['core']['data'][i][key] + '</p>')
-								}
-							}
-
-                            /* Auto open the tree node */
-                            $('#treeViewDiv').jstree('open_node', jsonData['core']['data'][i]['parent'], function(e, data) {
-                                $('#treeViewDiv').jstree(('select_node'), jsonData['core']['data'][i]['id']);
-                            }, true);
-							//TODO Auto close the Tree Node
-
-                            //var selectedNode = {'id':jsonData['core']['data'][i]['id']};
-                            ////call selected node function to add the property details
-
-                        }
-                    }
-                }
+                //if(selectedNode != null){
+                //    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+                //        var obj = jsonTree['core']['data'][i];
+                //        if(selectedNode == obj.id){
+                //
+					//		/* The first time the Node getting selected */
+					//		//if(globalSelectedNode == null){
+					//		//	globalSelectedNode = selectedNode;
+					//		//}else{
+					//		//	$('#treeViewDiv').jstree(('deselect_node'),  globalSelectedNode );
+					//		//	globalSelectedNode = selectedNode;
+					//		//}
+                //
+                //            ///* Auto open the tree node */
+                //            //$('#treeViewDiv').jstree('open_node', jsonData['core']['data'][i]['parent'], function(e, data) {
+                //            //    $('#treeViewDiv').jstree(('select_node'), jsonData['core']['data'][i]['id']);
+                //            //}, true);
+                //
+                //            var node = {'id':obj.id};
+                //
+					//		/* Code segment to generate the dialog UI */
+					//		/* Create the pop up dialog box */
+					//		if(showInfoBox){
+					//			addDataToDetails(i);
+					//			nodeSelected1(obj.id);
+					//		}
+                //        }
+                //    }
+                //}
 
 			}
 		}, lastDown);
 	},
-
-//    /*
-//     Set up the IfcProperty Definition
-//    */
-//    nodeSelected : function(node){
-//        $("#object_info table tbody tr").remove();
-//        if (node.id != null) {
-//            o.model.get(node.id, function(product){
-//                if (product.oid == node.id) {
-//                    var tr = $("<tr></tr>");
-//                    tr.append("<b>" + product.object._t + "</b>");
-//                    if (product.object.Name != null) {
-//                        tr.append("<b>" + product.object.Name + "</b>");
-//                    }
-//                    $("#object_info table tbody").append(tr);
-//                    product.getIsDefinedBy(function(isDefinedBy){
-//                        if (isDefinedBy.object._t == "IfcRelDefinesByProperties") {
-//                            isDefinedBy.getRelatingPropertyDefinition(function(propertySet){
-//                                if (propertySet.object._t == "IfcPropertySet") {
-//                                    showPropertySet(propertySet);
-//                                }
-//                            });
-//                        }
-//                    });
-//                }
-//            });
-//        }
-//
-////		function isAlreadyExists(){
-////			var myArray = [0,1,2],
-////				needle = 1,
-////				index = indexOf.call(myArray, needle); // 1
-////		}
-//
-////		if(typeof this.SYSTEM.scene.data.properties[node.getId()] == 'undefined') {
-////			return;
-////		}
-////		var infoContainer = $('#object_info').find('.data');
-////		$(infoContainer).empty();
-////
-////		var properties = this.SYSTEM.scene.data.properties[node.getId()];
-////
-////		for(var i in properties) {
-////			if(typeof properties[i] == 'string') {
-////				$('<div />').append($('<label />').text(i)).appendTo(infoContainer);
-////				$('<div />').text(properties[i]).appendTo(infoContainer);
-////			}
-////		}
-//    },
-//
-//    showPropertySet : function(propertySet) {
-//        var headerTr = $("<tr class=\"active\"></tr>");
-//        headerTr.attr("oid", propertySet.oid);
-//        headerTr.attr("uri", propertySet.object.Name);
-//        if (propertySet.changedFields != null && propertySet.changedFields["Name"]) {
-//            headerTr.addClass("warning");
-//        }
-//        $("#object_info table tbody").append(headerTr);
-//        var headerTd = $("<td></td>");
-//        headerTr.append(headerTd);
-//
-//        headerTd.append("<b>" + propertySet.object.Name + "</b>");
-//        showProperties(propertySet, headerTr);
-//    },
-//
-//    showProperties : function(propertySet, headerTr) {
-//        propertySet.getHasProperties(function(property){
-//            if (property.object._t == "IfcPropertySingleValue") {
-//                showProperty(propertySet, property, headerTr);
-//            }
-//        });
-//    },
-//
-//    showProperty : function(propertySet, property, headerTr, editable){
-//        var tr = $("<tr></tr>");
-//        tr.attr("oid", property.oid);
-//        tr.attr("psetoid", propertySet.oid);
-//        headerTr.after(tr);
-//        if (property.changedFields != null && (property.changedFields["NominalValue"] || property.changedFields["Name"])) {
-//            tr.addClass("warning");
-//        }
-//
-//        tr.append("<td>" + property.object.Name + "</td>");
-//        getValue(tr, property, editable);
-//    },
-//
-//        getValue : function(tr, property, editable) {
-//            (function (tr) {
-//                property.getNominalValue(function(value){
-//                    var td = $("<td>");
-//                    var v = value == null ? "" : value._v;
-//                    var span = $("<span class=\"value nonEditable\">" + v + "</span>");
-//                    td.append(span);
-//                    tr.append(td);
-//                });
-//            } )(tr);
-//        }
-//    ,
-
-
-    /**
-     * Initializes the common events of the viewer
-     */
-    selectObject: function() {
-        //this.scene.pick(500, 300, {rayPick: true});
-        //var result = this.scene.findNode(25639);
-    },
 
 	/**
 	 * Creates or updates the SceneJS Scene, based on a revision
@@ -589,3 +494,14 @@ BIMSURFER.Viewer = BIMSURFER.Class({
 		this.showType(types, revision);
 	}
 });
+
+//var custom = {
+//	x: function(){
+//		return this;
+//	},
+//	y: function(){
+//
+//	}
+//}
+//
+//custom.x().y()

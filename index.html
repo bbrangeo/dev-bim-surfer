@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta charset="utf-8" />
-
 <title>BIMsurfer - Basic viewer</title>
-
 <script type="text/javascript">
-
 var debug = {};
-
-
 </script>
 
+
+    <!-- Jquery UI CSS -->
+    <link rel="stylesheet" href="./lib/noUiSlider.8.0.2/nouislider.css">
+    <link rel="stylesheet" href="./lib/noUiSlider.8.0.2/nouislider.pips.css">
+    <!-- Jquery UI JS -->
+    <script type="text/javascript" src="./lib/noUiSlider.8.0.2/nouislider.js"></script>
+
+    <!-- Adding the schema files -->
+    <script type="text/javascript" src="./js/ifc2x3tc1.js"></script>
+    <script type="text/javascript" src="./js/ifc4.js"></script>
+
+
     <!-- Default CSS file to the JS Tree -->
-    <link rel="stylesheet" href="css/style.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
     <!-- Jquery import -->
     <script type="text/javascript" src="./lib/jquery-1.10.2/jquery-1.10.2.min.js"></script>
     <!-- Js Tree Library -->
@@ -53,218 +59,466 @@ var debug = {};
 
     <script type="text/javascript" src="js/String.js"></script>
     <script type="text/javascript" src="js/utils.js"></script>
+	<script type="text/javascript" src="js/chatcomment.js"></script>
 
+    <!-- Bootrap CSS link -->
     <link rel="stylesheet" href="./css/bootstrap.css" type="text/css" />
+	<link href="./css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
 
-    <link rel="stylesheet" href="./css/font-awesome.css" type="text/css" />
-    <!-- Jquery UI css and js , needed for the dialog modal -->
-    <link rel="stylesheet" href="./lib/jquery-ui-1.10.3.custom/css/custom-theme/jquery-ui-1.10.3.custom.css">
-    <script type="text/javascript" src="./lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
+    <link rel="stylesheet" href="./css/font-awesome.css" type="text/css" />    
+    <link rel="stylesheet" href="css/popup.css" />  
 
-<!-- <script type="text/javascript" src="./js/example1.js"></script> -->
+    <!-- Jquery UI CSS -->
+	<link rel="stylesheet" href="./lib/jquery-ui-1.10.4.custom/css/smoothness/jquery-ui-1.10.4.custom.css">
+	<!-- Jquery UI JS -->
+    <script type="text/javascript" src="./lib/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.js"></script>
+
+
+
+
+
     <script>
         /* Define the global variables */
 
+        var sliderPositions = {
+            storeys : []
+        };
+        var sliderSwitch = true;
+        var opacitySliderSwitch = true;
         var ifcSpaceData = {
             "core": {
                 "data": []
             }
         };
         var treeData="";
-
-        /* From get all of type "ifcProject" */
-        var ifcProject;
-        var ifcModel;
-
         /* This gloabal variable is used to get the total count of objects in a building */
         var totObjects = 0;
-        /* Associated with the context switching of Js tree */
-        var process = true;
-
-//        new Edit
-        Global = {};
-
-        function Notifier() {
-            var othis = this;
-
-            this.setSelector = function(selector) {
-                var currentmessage = $(othis.selector).find(".message").html();
-                $(othis.selector).hide();
-                othis.selector = selector;
-                if (currentmessage != "" && currentmessage != undefined) {
-                    $(selector).show();
-                    $(selector).find(".message").html(currentmessage).parent().addClass("alert-success");
-                } else {
-                    $(othis.selector).hide();
-                }
-                $(othis.selector).find(".close").click(othis.clear);
-            };
-
-            this.clear = function() {
-                $(othis.selector).find(".message").html("").parent().hide();
-            };
-
-            this.resetStatus = function(){
-                if (othis.lastTimeOut != null) {
-                    clearTimeout(othis.lastTimeOut);
-                    othis.lastTimeOut = null;
-                }
-                $(othis.selector).stop(true, true);
-                $(othis.selector).fadeOut(1000);
-            };
-
-            this.resetStatusQuick = function(){
-                if (othis.lastTimeOut != null) {
-                    clearTimeout(othis.lastTimeOut);
-                    othis.lastTimeOut = null;
-                }
-                $(othis.selector).hide();
-            };
-
-            this.setSuccess = function(status, timeToShow) {
-                if (timeToShow == null) {
-                    timeToShow = 5000;
-                }
-                $(othis.selector).stop(true, true);
-                if (othis.lastTimeOut != null) {
-                    clearTimeout(othis.lastTimeOut);
-                    othis.lastTimeOut = null;
-                }
-                $(othis.selector).find(".message").html(status).parent().removeClass("initialhide").removeClass("alert-danger").removeClass("alert-info").addClass("alert-success").show();
-                var notifier = this;
-                if (timeToShow != -1) {
-                    othis.lastTimeOut = setTimeout(function(){
-                        notifier.resetStatus();
-                    }, timeToShow);
-                }
-            };
-
-            this.setInfo = function(status, timeToShow) {
-                if (timeToShow == null) {
-                    timeToShow = 5000;
-                }
-                $(othis.selector).stop(true, true);
-                if (othis.lastTimeOut != null) {
-                    clearTimeout(othis.lastTimeOut);
-                    othis.lastTimeOut = null;
-                }
-                $(othis.selector).find(".message").html(status).parent().show().removeClass("alert-danger").removeClass("alert-success").addClass("alert-info");
-                var notifier = this;
-                if (timeToShow != -1) {
-                    othis.lastTimeOut = setTimeout(function(){
-                        notifier.resetStatus();
-                    }, timeToShow);
-                }
-            };
-
-            this.setError = function(error) {
-                if (othis.lastTimeOut != null) {
-                    clearTimeout(othis.lastTimeOut);
-                    othis.lastTimeOut = null;
-                }
-                $(othis.selector).find(".message").html(error).parent().removeClass("alert-info").removeClass("alert-success").addClass("alert-danger").show();
-            };
-
-            othis.setSelector(".indexStatus .status");
-        }
-
-        Global.notifier = new Notifier();
+        var showInfoBox = true;
 
     </script>
-<script type="text/javascript" src="./js/final.js"></script>
-<script type="text/javascript" src="./js/modelcontrols.js"></script>
-<script type="text/javascript" src="./js/bootstrap.js"></script>
+
+    <script type="text/javascript" src="./js/final.js"></script>
+    <script type="text/javascript" src="./js/modelcontrols.js"></script>
+    <script type="text/javascript" src="./js/bootstrap.js"></script>
 
 
 </head>
-
 <!--<body oncontextmenu="return false;">-->
 <body>
-<!-- Start of NavBar -->
-<nav class="navbar navbar-inverse">
-  <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">BIM</a>
-    </div>
-  </div><!-- /.container-fluid -->
-</nav>
-
-<!-- End of NavBar -->
 <!-- Stack the columns on mobile by making one full-width and the other half-width -->
 <div class="row">
     <!-- Div for the project tree viewer -->
   	<div class="col-xs-3" >
         <div class="col-xs-12">
+
             <div class="col-lg-12">
-                <h3>Projects Structure
+
+            <!--<div id="sliderx"></div>-->
+
+
+
+                <!--<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">-->
+                    <!--<div class="panel panel-default">-->
+                        <!--<div class="panel-heading" role="tab" id="headingThree">-->
+                            <!--<h4 class="panel-title">-->
+                                <!--<a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">-->
+                                    <!--Slider Bar-->
+                                <!--</a>-->
+                            <!--</h4>-->
+                        <!--</div>-->
+                        <!--<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">-->
+                            <!--<div class="panel-body">-->
+                                <!--&lt;!&ndash;<div class="col-lg-12">&ndash;&gt;-->
+                                    <!--&lt;!&ndash;<h5 style="text-align: center">Transperancy</h5>&ndash;&gt;-->
+                                    <!--&lt;!&ndash;<p style="text-align: center" id="selectedNode1"></p>&ndash;&gt;-->
+                                    <!--&lt;!&ndash;<div id="slider3"></div>&ndash;&gt;-->
+                                    <!--&lt;!&ndash;<div id="s3" style="text-align:center">0.00</div>&ndash;&gt;-->
+                                <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                            <!--</div>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</div>-->
+
+
+
+
+                <h3>Project Tree
                     <button type="button" class="btn btn-default" aria-label="Right Align" onclick="refreshTree()">
                         <span class="fa fa-refresh" aria-hidden="true"></span>
                     </button>
                 </h3>
             </div>
-
             <!-- Div tag to display the json tree view-->
-            <div id="treeViewDiv" class="col-lg-12" style="height: 500px; overflow: auto">
+            <div id="treeViewDiv" class="col-lg-12" style="height: 600px; overflow: auto">
 
             </div>
-
-
-
         </div>
 	</div>
 
+
   	<!-- Div for the 3d renderer+ -->
   	<div class="col-xs-9">
+
+        <div id="topnav" class="col-xs-12"  style="!important;padding: 0px">
+            <div class="panel panel-default">
+                <div class="panel-body" style="!important;padding: 0px;height: 75px" >
+
+                    <div  class="col-xs-2" style="height: 60px" >
+                            <button type="button" class="btn btn-default btn-sm" id="infoBoxVisibility" style="margin-top: 5px">
+                                Info Box <span class="fa fa-check" aria-hidden="true"></span>
+                            </button>
+
+                    </div>
+
+                    <div  class="col-xs-9" style="height: 60px" >
+                        <!--<div class="checkbox">-->
+                            <!--<label>-->
+                                <!--<input type="checkbox" id="popup-checkbox" checked> InfoBox-->
+                            <!--</label>-->
+                        <!--</div>-->
+
+                        <!--<div class="col-xs-2">-->
+                            <!--<button type="button" class="btn btn-default btn-sm" id="infoBoxVisibility" style="margin-top: 5px">-->
+                                <!--Info Box <span class="fa fa-check" aria-hidden="true"></span>-->
+                            <!--</button>-->
+                        <!--</div>-->
+
+                        <div class="col-xs-6">
+                            <span class="label label-default">X Axis Slider</span>
+                            <span class="label label-default">Value</span>
+                            <div id="sliderx"></div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <span class="label label-default">Opacity Slider</span>
+                            <div id="opacitySlider"></div>
+                        </div>
+
+                    </div>
+
+                    <!--<div  class="col-xs-5" style="height: 60px" >-->
+
+                        <!-- -->
+
+
+                    <!--</div>-->
+
+                </div>
+            </div>
+        </div>
+
+        <script >
+            var slider = document.getElementById('sliderx');
+            var opacitySlider = document.getElementById('opacitySlider');
+
+            noUiSlider.create(opacitySlider, {
+                start: [ 1 ],
+                connect: 'lower',
+                behaviour: 'tap',
+                step : 0.1,
+                range: {
+                    'min': [   0 ],
+                    'max': [ 1 ]
+                },
+                pips: {
+                    mode: 'values',
+                    values: [0,1],
+                    density: 20
+                }
+            });
+
+            opacitySlider.noUiSlider.on('update', function( values, handle ) {
+//                var nodeId = $("#treeViewDiv").jstree("get_selected");
+                if(viewer != null){
+
+                    if(opacitySliderSwitch){
+                        var nodeId = $("#treeViewDiv").jstree("get_selected");
+                        var obj;
+                        var nodeType;
+                        /* Check the node Type */
+                        for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+                            obj = jsonTree['core']['data'][i];
+
+                            if(nodeId == obj.id){
+                                nodeType = jsonData['core']['data'][i]['type'];
+                                break;
+                            }
+                        }
+
+                        var posId ;
+                        if(nodeType == "buildingStorey" ){
+                            for(var i = 0; i < sliderPositions.storeys.length; i++) {
+                                if(sliderPositions.storeys[i]['id'] == obj.id ){
+                                    posId = i;
+                                    break;
+                                }
+                            }
+                        }
+                        sliderPositions.storeys[i]['opacityVal'] = opacitySlider.noUiSlider.get();
+                        changeVisibility(opacitySlider.noUiSlider.get());
+
+
+
+
+                    }
+
+
+
+
+
+
+//                    var myMatrix = viewer.scene.findNode(nodeId);
+//
+//                    if(myMatrix != null){
+//                        /* Some weird thing I dont know why */
+//                        if(myMatrix.nodes[0].type == "material"){
+//                            myMatrix.nodes[0].setAlpha(opacitySlider.noUiSlider.get());
+//                        }else{
+//                            myMatrix.parent.setAlpha(opacitySlider.noUiSlider.get());
+//                        }
+//                    }
+                }
+
+            });
+
+            noUiSlider.create(slider, {
+                start: [ 0 ],
+                connect: 'lower',
+                behaviour: 'tap',
+                step : 0.2,
+                range: {
+                    'min': [   -20 ],
+                    'max': [ 20 ]
+                },
+                pips: {
+                    mode: 'values',
+                    values: [-20,0,20],
+                    density: 8
+                }
+            });
+
+            slider.noUiSlider.on('update', function( values, handle ) {
+                if(sliderSwitch){
+                    /* Check if the current node selected is a buildingstorey */
+                    var nodeId = $("#treeViewDiv").jstree("get_selected");
+                    var obj;
+                    var nodeType;
+                    /* Check the node Type */
+                    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+                        obj = jsonTree['core']['data'][i];
+
+                        if(nodeId == obj.id){
+                            nodeType = jsonData['core']['data'][i]['type'];
+                            break;
+                        }
+                    }
+
+                    var posId ;
+                    if(nodeType == "buildingStorey" ){
+                        for(var i = 0; i < sliderPositions.storeys.length; i++) {
+                            if(sliderPositions.storeys[i]['id'] == obj.id ){
+                                posId = i;
+                                break;
+                            }
+                        }
+                    }
+
+
+                    $('#s2').html("Value : " +slider.noUiSlider.get());
+                    var currentVal = slider.noUiSlider.get();
+                    inc =  currentVal - sliderPositions.storeys[i]['prevSliderVal'];
+                    prevSliderVal = slider.noUiSlider.get();
+                    sliderPositions.storeys[i]['prevSliderVal'] =  slider.noUiSlider.get();
+                    move(inc);
+                }
+            });
+
+        </script>
+
+
 
         <div id="parent" class="col-xs-12">
             <div id="dialog" title="Selected Object">
             </div>
         </div>
-
         <div id="testing" class="col-xs-12">
             <div id="tenant">
                 <ul>
-                    <li><a href="#tenant_details">Basic Details</a></li>
-                    <li><a href="#tenant_events">Properties</a></li>
-                    <li><a href="#tenant_jobs">Time Dimension</a></li>
-                    <li><a href="#tenant_documents">Documents</a></li>
-                    <!--<li><a href="#tenant_docs">Documents</a></li>-->
-                    <!--<li class="ui-tab-dialog-close"></li>-->
+                    <li><a href="#tenant_details">General</a></li>
+                    <li><a href="#tenant_events_temp">Properties</a></li>
+                    <li><a href="#tenant_jobs">Planning</a></li>
+					<li><a href="#tenant_cost">Cost</a></li>
+					<li><a href="#tenant_maintenance">Maintenance</a></li>
+					<li><a href="#tenant_documents">Documents</a></li>
+					<li><a href="#tenant_discussion" onclick="loadHistory()">Discussion</a></li>
+					<li class="ui-tab-dialog-close"> </li>
                 </ul>
                 <div>
                     <div id="tenant_details">
-                        some details
                     </div>
-                    <div id="tenant_events">
-                        <div id="object_info" class="col-lg-12">
-                            <table id="table_info">
-                                <thead>
-                                <!--<tr>-->
-                                <!--<th></th>-->
-                                <!--</tr>-->
-                                </thead>
-                                <tbody>
-                                <!--<tr>-->
-                                <!--<td></td>-->
-                                <!--</tr>-->
-                                </tbody>
-                            </table>
+                    <div id="tenant_events_temp">
+                        <div id="object_info_temp" class="col-lg-12">
                         </div>
+						<div id="testingData">
+
+						</div>
                    </div>
                     <div id="tenant_jobs">
-                        <p>Last Serviced - 1 month ago</p>
-                        <p>Depreciation Period - 2 months left</p>
+							<h3>Scheduled Related info: sample</h3>
+							<table class="table table-bordered table-striped dataTable tbl_info" style="width: 100%">
+								<thead>
+									<tr role="row">
+										<th>Task</th>
+										<th>Start Date</th>
+										<th>End Date</th>
+										<th>Progress</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr role="row" class="odd">
+										<td>Purchasing from company X</td>
+										<td>02-Jan-2015</td>
+										<td>03-Jan-2015</td>
+										<td><div id="progressbar1" class="progressbar"><div class="progress-label"></div></div></td>
+									 </tr>
+									<tr role="row" class="even">
+										<td>Fixing to floor</td>
+										<td>02-Jan-2015</td>
+										<td>03-Jan-2015</td>
+										<td><div id="progressbar2" class="progressbar"><div class="progress-label"></div></div></td>
+									</tr>
+								</tbody>
+							</table>
                     </div>
-                    <div id="tenant_documents">
-                        Dcoument Details
-                    </div>
+					<div id="tenant_discussion">
+						<div class="box box-primary direct-chat direct-chat-primary">
+							<div class="box-header with-border">
+							  <h3 class="box-title">Direct Chat</h3>
+							</div><!-- /.box-header -->
+							<div class="box-body">
+							  <!-- Conversations are loaded here -->
+							  <div class="direct-chat-messages">
+								<!-- Message. Default to the left -->
+								<div class="direct-chat-msg">
+								  <div class="direct-chat-info clearfix">
+									<span class="direct-chat-name pull-left">Alexander Pierce</span>
+									<span class="direct-chat-timestamp pull-right">23 Jan 2:00 pm</span>
+								  </div><!-- /.direct-chat-info -->
+								  <img alt="message user image" src="images/user3-128x128.jpg" class="direct-chat-img"><!-- /.direct-chat-img -->
+								  <div class="direct-chat-text">
+									Is this template really for free? That's unbelievable!
+								  </div><!-- /.direct-chat-text -->
+								</div><!-- /.direct-chat-msg -->
+
+								<!-- Message to the right -->
+								<div class="direct-chat-msg right">
+								  <div class="direct-chat-info clearfix">
+									<span class="direct-chat-name pull-right">Sarah Bullock</span>
+									<span class="direct-chat-timestamp pull-left">23 Jan 2:05 pm</span>
+								  </div><!-- /.direct-chat-info -->
+								  <img alt="message user image" src="images/user5-128x128.jpg" class="direct-chat-img"><!-- /.direct-chat-img -->
+								  <div class="direct-chat-text">
+									You better believe it!
+								  </div><!-- /.direct-chat-text -->
+								</div><!-- /.direct-chat-msg -->
+								<div class="old"></div>
+
+								<div class="p"></div>
+								<div class="new"></div>
+
+
+
+							  </div><!--/.direct-chat-messages-->
+							</div><!-- /.box-body -->
+							<div class="box-footer">
+							  <form method="post" action="#">
+								<div class="input-group">
+								  <input type="text" class="form-control" placeholder="Type Message ..." name="message">
+								  <span class="input-group-btn">
+									<button class="btn btn-primary btn-flat" id="chatButton" type="button" >Send</button>
+								  	
+								  
+								  </span>
+								</div>
+							  </form>
+							</div><!-- /.box-footer-->
+						 </div>						
+					</div>
+					<div id="tenant_documents">
+							<h3>Related Docuemnt For: sample</h3>
+							<table id="tbl_info" class="table table-bordered table-striped dataTable" style="width: 100%">
+								<thead>
+									<tr role="row">
+										<th>Updated on</th>
+										<th>Document</th>
+										<th>Uploaded by</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr role="row" class="odd">
+										<td>01-Dec-2014</td>
+										<td><a href="#">Evaluation reports on Safety 2014 Q4</a></td>
+										<td>Roger Gorden - ABC contruction</td>
+									 </tr>
+									<tr role="row" class="even">
+										<td>02-Jan-2014</td>
+										<td>Supplier Manual GoodWood doors V2.0</td>
+										<td>Derick Smith - Kepler Timer Corp</td>
+									</tr>
+								</tbody>
+							</table>	
+					</div>
+					<div id="tenant_maintenance">
+						<h3>Maintenance Information For: sample</h3>
+						<table id="tbl_info" class="table table-bordered table-striped dataTable" style="width: 100%">
+							<thead>
+								<tr role="row">
+									<th>Record Date</th>
+									<th>Maintenance Done By</th>
+									<th>Activity</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr role="row" class="odd">
+									<td>01-Dec-2014</td>
+									<td>Belfast Corp</td>
+									<td>Replaced dooe handle</td>
+								 </tr>
+								<tr role="row" class="even">
+									<td>02-Jan-2014</td>
+									<td>Belfast Corp</td>
+									<td>Routine check on all doors</td>
+								</tr>
+							</tbody>
+						</table>						
+					</div>
+					<div id="tenant_cost">
+						<h3>Cost Related Infomation For: Sample</h3>
+						<table id="tbl_info" class="table table-bordered table-striped dataTable" style="width: 100%">
+							<thead>
+								<tr role="row">
+									<th>Unit Cost</th>
+									<th>Supplier</th>
+									<th>Procument Date</th>
+									<th>Budget Allocated</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr role="row" class="odd">
+									<td>230$</td>
+									<td>Kepler Timber Corporation</td>
+									<td>03-Mar-2015</td>
+									<td>122,000$</td>
+								 </tr>
+								<tr role="row" class="even">
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+							</tbody>
+						</table>							
+					</div>
                 </div>
             </div>
         </div>
@@ -293,7 +547,20 @@ var debug = {};
 
 <script>
 
+function setProgressVal(id, val) {
+	$("#" + id).progressbar({
+		value: val,
+		change: function () {
+			$("#" + id + " .progress-label").text($("#" + id).progressbar("value") + "%");
+		}				
+	});
+}
 $(function() {
+	$( ".progressbar" ).progressbar({
+		value: false	
+    });
+	setProgressVal('progressbar1', 37); // Sample to set the value
+	setProgressVal('progressbar2', 67); // Sample to set the value
     $("#dialog").dialog({
         autoOpen: false,
         position: {
@@ -313,18 +580,28 @@ $.fn.tabbedDialog = function () {
     this.dialog({
         'autoOpen':false,
         'modal':false,
-        'minWidth':450,
-        'minHeight':200,
-        'maxHeight' : 200,
+        'minWidth':630,
+        'minHeight':300,
+        'height':300,
         'draggable':true,
         position: {
             my: "left top",
             at: "left bottom",
             of: $("#testing")
     }});
-    this.find('.ui-tab-dialog-close').append($('a.ui-dialog-titlebar-close'));
-    this.find('.ui-tab-dialog-close').css({'position':'absolute','right':'0', 'top':'23px'});
-    this.find('.ui-tab-dialog-close > a').css({'float':'none','padding':'0'});
+    this.find('.ui-tab-dialog-close').append($('button.ui-dialog-titlebar-close'));
+    this.find('.ui-tab-dialog-close').css({'position':'absolute','right':'6px', 'top':'6px'});
+	this.find('.ui-dialog-titlebar-close').text("X");
+    this.find('.ui-dialog-titlebar-close').css({
+				"font-size" : "10px",
+				"margin" : "3px 0 0",
+				"height": "20px",
+				"line-height": "0",
+				"position": "absolute",
+				"right": "-5px",
+				"top": "50%",
+				"width": "20px"
+				});
     var tabul = this.find('ul:first');
     this.parent().addClass('ui-tabs').prepend(tabul).draggable('option','handle',tabul);
     this.siblings('.ui-dialog-titlebar').remove();
@@ -332,6 +609,252 @@ $.fn.tabbedDialog = function () {
 };
 
 $('#tenant').tabbedDialog();
+
+function changeVisibility(inc){
+    var nodeId = $("#treeViewDiv").jstree("get_selected");
+    var nodeType;
+    globalMatrix=[];
+
+    /* Check the node Type */
+    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+        var obj = jsonTree['core']['data'][i];
+
+        if(nodeId == obj.id){
+            nodeType = jsonData['core']['data'][i]['type'];
+            break;
+        }
+    }
+
+    if(nodeType == "buildingStorey" ){
+        // Get All Types initially
+        var types = getAllChildElements(nodeId);
+        for(var j=0; j< types.length;j++){
+            var childElements = [];
+            childElements = getAllChildElements1(types[j],childElements);
+            for(var k=0;k<childElements.length;k++){
+
+                var childId = childElements[k];
+                globalMatrix.push(childId);
+                var sceneNode = viewer.scene.findNode(childId);
+            }
+
+        }
+    }
+
+    allOpacityRendered = false;
+    viewer.scene.on("tick",function(){
+        if(!allOpacityRendered){
+            for(var j=0 ; j< globalMatrix.length ; j++){
+                var myMatrix = viewer.scene.findNode(globalMatrix[j]);
+
+                if(myMatrix != null){
+                    /* Some weird thing I dont know why */
+                    if(myMatrix.nodes[0].type == "material"){
+                        myMatrix.nodes[0].setAlpha(inc);
+                    }else{
+                        myMatrix.parent.setAlpha(inc);
+                    }
+                }
+            }
+            allOpacityRendered = true;
+        }
+    });
+};
+
+
+function move(inc){
+    var nodeId = $("#treeViewDiv").jstree("get_selected");
+    var nodeType;
+    globalMatrix=[];
+
+    /* Check the node Type */
+    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+        var obj = jsonTree['core']['data'][i];
+
+        if(nodeId == obj.id){
+            nodeType = jsonData['core']['data'][i]['type'];
+            break;
+        }
+    }
+
+    if(nodeType == "buildingStorey" ){
+        // Get All Types initially
+        var types = getAllChildElements(nodeId);
+        for(var j=0; j< types.length;j++){
+            var childElements = [];
+            childElements = getAllChildElements1(types[j],childElements);
+            for(var k=0;k<childElements.length;k++){
+
+                var childId = childElements[k];
+                globalMatrix.push(childId);
+                var sceneNode = viewer.scene.findNode(childId);
+            }
+
+        }
+    }
+
+//    globalMatrix[0] = nodeId[0];
+    allRendered = false;
+    viewer.scene.on("tick",function(){
+        // Put a switch if anything new to be rendered
+        if(!allRendered){
+            for(var j=0 ; j< globalMatrix.length ; j++){
+                var myMatrix = viewer.scene.findNode(globalMatrix[j]);
+
+                if(myMatrix != null){
+                    /* Some weird thing I dont know why */
+                    if(myMatrix.nodes[0].type == "material"){
+                        var modelMatrix  = myMatrix.nodes[0].nodes[0].getModelMatrix();
+                        modelMatrix[13] += inc;
+                        myMatrix.nodes[0].nodes[0].setElements(modelMatrix);
+//                        myMatrix.nodes[0].setAlpha(0.5);
+                    }else{
+                        var modelMatrix  = myMatrix.nodes[0].getModelMatrix();
+                        modelMatrix[13] += inc;
+                        myMatrix.nodes[0].setElements(modelMatrix);
+//                        myMatrix.parent.setAlpha(0.5);
+                    }
+                }
+            }
+            allRendered = true;
+        }
+    });
+};
+
+function getAllChildElements(parent){
+    var childElements = [];
+    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+        var obj = jsonTree['core']['data'][i];
+        if(obj.parent == parent){
+            childElements.push(obj.id);
+        }
+    }
+    console.log(childElements);
+    return childElements;
+}
+
+
+function getAllChildElements1(parent,childElements){
+    //var childElements = [];
+    for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+        var obj = jsonTree['core']['data'][i];
+        if(obj.parent == parent){
+            childElements.push(obj.id);
+            getAllChildElements1(obj.id,childElements,true);
+
+        }
+
+    }
+    //console.log(childElements);
+    return childElements;
+}
+
+    function setSliderPositions(){
+        if(sliderPositions.storeys.length == 0){
+            for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+                if(jsonTree['core']['data'][i]['type'] == "buildingStorey"){
+                    var pos = {
+                        id : jsonTree['core']['data'][i]['id'],
+                        pos : 0,
+                        prevSliderVal : 0,
+                        opacityVal : 1
+                    };
+                    sliderPositions.storeys.push(pos);
+                }
+            }
+        }else{
+            var nodeId = $("#treeViewDiv").jstree("get_selected");
+            var existingBuildingStorey = false;
+            for(var i = 0; i < sliderPositions.storeys.length; i++) {
+                if(nodeId == sliderPositions.storeys[i]['id']){
+                    sliderSwitch = false;
+                    slider.noUiSlider.set([sliderPositions.storeys[i]['prevSliderVal']]);
+                    $('#s2').html("Value : " +sliderPositions.storeys[i]['prevSliderVal']);
+                    sliderSwitch = true;
+
+
+                    opacitySliderSwitch = false;
+                    opacitySlider.noUiSlider.set([sliderPositions.storeys[i]['opacityVal']]);
+                    $('#s2').html("Value : " +sliderPositions.storeys[i]['opacityVal']);
+                    opacitySliderSwitch = true;
+
+                    existingBuildingStorey = true;
+                    break;
+                }
+            }
+
+            /* A new building has been loaded so add those building storeys to the slider*/
+            if(!existingBuildingStorey){
+                for(var i = 0; i < jsonTree['core']['data'].length; i++) {
+                    if(jsonTree['core']['data'][i]['type'] == "buildingStorey"){
+
+                        var nodeExists = false;
+
+                        for(var j = 0; j < sliderPositions.storeys.length; j++) {
+                            if(sliderPositions.storeys[j]['id'] == jsonTree['core']['data'][i]['id']){
+                                nodeExists = true;
+                                break;
+                            }
+                        }
+
+                        if(!nodeExists){
+                            var pos = {
+                                id : jsonTree['core']['data'][i]['id'],
+                                pos : 0,
+                                prevSliderVal : 0
+                            };
+                            sliderPositions.storeys.push(pos);
+                        }
+                    }
+                }
+                sliderSwitch = false;
+                slider.noUiSlider.set([0]);
+                $('#s2').html("Value : " +0);
+                sliderSwitch = true;
+
+                opacitySliderSwitch = false;
+                opacitySlider.noUiSlider.set([1]);
+                $('#s2').html("Value : " +0);
+                opacitySliderSwitch = true;
+            }
+
+        }
+    }
+
+$("#infoBoxVisibility").on('click', function(){
+    if(showInfoBox){
+        showInfoBox = false;
+        $(this).find('span')
+                .removeClass('fa-check')
+                .addClass('fa-close');
+    }else{
+        showInfoBox = true;
+        $(this).find('span')
+                .removeClass('fa-close')
+                .addClass('fa-check');
+    }
+
+});
+
+    function setOpacitySliderPosition(id){
+        var myMatrix = viewer.scene.findNode(id);
+
+        if(myMatrix != null){
+            var alpha = 1;
+            /* Some weird thing I dont know why */
+            if(myMatrix.nodes[0].type == "material"){
+                alpha = myMatrix.nodes[0].getAlpha();
+            }else{
+                alpha = myMatrix.parent.getAlpha();
+            }
+
+            opacitySliderSwitch = false;
+            opacitySlider.noUiSlider.set([alpha]);
+            $('#s2').html("Value : " +alpha);
+            opacitySliderSwitch = true;
+        }
+    }
+
 
 </script>
 
