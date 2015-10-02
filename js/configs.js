@@ -1,25 +1,28 @@
 /* Reset the credentials with the server credentials */
 /* Credentials set to the local host */
-//var serverUrl = "http://127.0.0.1:8080/";
-//var username = "admin@bimserver.org";
-//var pass = "admin";
+var serverUrl = "http://127.0.0.1:8080/";
+var username = "admin@bimserver.org";
+var pass = "admin";
 
 
 ///* Credentials set to the Remote Server uncomment to load from remote server */
-var serverUrl = "https://demo.bimaas.uk:9451/bim";
-var username = "admin@bimserver.org";
-var pass = "admin";
+//var serverUrl = "https://demo.bimaas.uk:9451/bim";
+//var username = "admin@bimserver.org";
+//var pass = "admin";
 
 /* Global Variable to access the bim server api */
 var bimapi;
 
 /* Testing purpose remove after this*/
-var globalSelectedNode = null;
 var globalMatrix = [];
 var allRendered = false;
 var allOpacityRendered = false;
 var inc = 0;
 var prevSliderVal = 0;
+
+var sliderPositions = {
+    storeys : []
+};
 
 // More global Variables
 //TODO more comments on the variables
@@ -40,7 +43,27 @@ var jsonTree = {
     //    //"tie_selection" : false
     //}
     //,"plugins" : [ "checkbox" ]
+    ,"plugins" : [ "search" ]
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var hiddenElements=[];
 var loadedProjects = [];
 
@@ -269,7 +292,6 @@ function testFunction(id){
         var obj = jsonTree['core']['data'][i];
         if(id == obj.id){
             var node = {'id':obj.id};
-
             /* Code segment to generate the dialog UI */
             /* Create the pop up dialog box */
             if(showInfoBox){

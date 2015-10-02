@@ -69,10 +69,6 @@ $(function()
                         /* Add it to the json structure */
                         project.lastRevisionId = revisionIds[i];
 
-                        //jsonTree['core']['data'].push({'id': project.oid, 'parent' : parentId, "text":project.name,'data':project,"icon":"fa fa-home"});
-                        //jsonData['core']['data'].push({'id': project.oid, 'parent' : parentId, "text":project.name,'data':project,'isProject':true});
-
-
                         /* Set the project structure to the json tree */
                         jsonTree['core']['data'].push({'id': project.oid, 'parent' : parentId,'data':project,'type':'project', 'name' :project.name ,
                             "text":project.name + '&nbsp; <button  type="button" class="btn btn-default btn-xs treeButton"  align="right" data-id="'
@@ -82,23 +78,6 @@ $(function()
 
                     }
                 }
-
-                //var id = parseInt(projectId);
-                //var pId = parseInt(project.oid );
-                //if( id === pId){
-                //    /* Set the project structure to the json tree */
-                //    //var subProjects = project.subProjects;
-                //    var length = project.subProjects.length
-                //    jsonTree['core']['data'].push({'id': project.oid, 'parent' : parentId, "text":project.name,'data':project,"icon":"fa fa-home"});
-                //    jsonData['core']['data'].push({'id': project.oid, 'parent' : parentId, "text":project.name,'data':project,'isProject':true});
-                //
-                //    if( length != 0 ){
-                //        /* Again loop through all the elements to get the sub projects */
-                //        for(var j =0 ; j < length ; j++){
-                //            setAllRelatedProjects(projects,project.subProjects[j]);
-                //        }
-                //    }
-                //}
             }
         });
     }
@@ -221,179 +200,7 @@ $(function()
         }
     });
 
-    function toggleProjectVisibility(id,state,selectedDiv){
-        if(state == true){
-            $(selectedDiv).data('state',"false");
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye')
-                .addClass('fa-eye-slash');
-        }else{
-            $(selectedDiv).data('state',true);
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye-slash')
-                .addClass('fa-eye');
-        }
 
-        var sites = getAllChildElements(id);
-        for(var i=0;i<sites.length;i++){
-            toggleIfcSiteVisibility(sites[i],state,selectedDiv);
-            var buildings = getAllChildElements(sites[i]);
-            for(var j=0;j<buildings.length;j++){
-                toggleBuildingVisibility(buildings[j],state,selectedDiv);
-            }
-        }
-    }
-
-    function toggleIfcSiteVisibility(id,state,selectedDiv){
-        if(state == true){
-            $(selectedDiv).data('state',"false");
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye')
-                .addClass('fa-eye-slash');
-        }else{
-            $(selectedDiv).data('state',true);
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye-slash')
-                .addClass('fa-eye');
-        }
-
-        var sceneNode = viewer.scene.findNode(id);
-        if(sceneNode != null){
-
-            sceneNode.nodeId = sceneNode.id;
-
-            if( state == true ){
-                sceneNode.findParentByType("enable").setEnabled(false);
-                $(selectedDiv).data('state',"false");
-            }else{
-                sceneNode.findParentByType("enable").setEnabled(true);
-                $(selectedDiv).data('state',true);
-            }
-
-        }
-    }
-
-    function toggleBuildingVisibility(id,state,selectedDiv){
-        if(state == true){
-            $(selectedDiv).data('state',"false");
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye')
-                .addClass('fa-eye-slash');
-        }else{
-            $(selectedDiv).data('state',true);
-            $(selectedDiv).find('span')
-                .removeClass('fa-eye-slash')
-                .addClass('fa-eye');
-        }
-        // get all Ifc Storeys
-        var storeys = getAllChildElements(id);
-        if(state== true){
-            for(var k=0;k<storeys.length;k++){
-                var types = getAllChildElements(storeys[k]);
-                for(var j=0; j< types.length;j++){
-                    //var childElements = getAllChildElements(types[j])
-                    var childElements = [];
-                    childElements = getAllChildElements1(types[j],childElements);
-                    hideElements(childElements);
-                }
-            }
-            $(selectedDiv).data('state',"false");
-        }else{
-            for(var k=0;k<storeys.length;k++){
-                var types = getAllChildElements(storeys[k]);
-                for(var j=0; j< types.length;j++){
-                    //var childElements = getAllChildElements(types[j])
-                    var childElements = [];
-                    childElements = getAllChildElements1(types[j],childElements);
-                    showElements(childElements);
-                }
-            }
-            $(selectedDiv).data('state',true);
-        }
-    }
-
-    function toggleBuildingStorey(id,state,selectedDiv){
-        // Get All Types initially
-        var types = getAllChildElements(id);
-        if(state == true){
-            for(var j=0; j< types.length;j++){
-                //var childElements = getAllChildElements(types[j])
-                var childElements = [];
-                childElements = getAllChildElements1(types[j],childElements);
-                hideElements(childElements);
-            }
-            $(selectedDiv).data('state',"false");
-        }else{
-            for(var j=0; j< types.length;j++){
-                //var childElements = getAllChildElements(types[j])
-                var childElements = [];
-                childElements = getAllChildElements1(types[j],childElements);
-                showElements(childElements);
-            }
-            $(selectedDiv).data('state',true);
-        }
-    }
-
-    function hideElements(childElements){
-        for(var i=0;i<childElements.length;i++){
-
-            var childId = childElements[i];
-            var sceneNode = viewer.scene.findNode(childId);
-
-            if(sceneNode != null){
-                sceneNode.nodeId = sceneNode.id;
-                sceneNode.findParentByType("enable").setEnabled(false);
-
-                $('#treeViewDiv').find('#'+ childId +'').find('span')
-                    .removeClass('fa-eye')
-                    .addClass('fa-eye-slash');
-            }
-        }
-    }
-
-    function showElements(childElements){
-        for(var i=0;i<childElements.length;i++){
-
-            var childId = childElements[i];
-            var sceneNode = viewer.scene.findNode(childId);
-
-            if(sceneNode != null){
-                sceneNode.nodeId = sceneNode.id;
-                sceneNode.findParentByType("enable").setEnabled(true);
-
-                $('#treeViewDiv').find('#'+ childId +'').find('span')
-                    .removeClass('fa-eye-slash')
-                    .addClass('fa-eye');
-            }
-        }
-    }
-
-    function getAllChildElements(parent){
-        var childElements = [];
-        for(var i = 0; i < jsonTree['core']['data'].length; i++) {
-            var obj = jsonTree['core']['data'][i];
-            if(obj.parent == parent){
-                childElements.push(obj.id);
-            }
-        }
-        //console.log(childElements);
-        return childElements;
-    }
-
-    function getAllChildElements1(parent,childElements){
-        //var childElements = [];
-        for(var i = 0; i < jsonTree['core']['data'].length; i++) {
-            var obj = jsonTree['core']['data'][i];
-            if(obj.parent == parent){
-                childElements.push(obj.id);
-                getAllChildElements1(obj.id,childElements,true);
-
-            }
-
-        }
-        //console.log(childElements);
-        return childElements;
-    }
 
     /* If the tree node is selected */
     $('#treeViewDiv').on("changed.jstree", function (e, data) {
@@ -441,8 +248,8 @@ $(function()
                             setOpacitySliderPosition();
                         }
 
-                        var selectedNode = {'id':jsonData['core']['data'][i]['id']};
-                        nodeSelected(selectedNode);
+                        //var selectedNode = {'id':jsonData['core']['data'][i]['id']};
+                        nodeSelected1(jsonData['core']['data'][i]['id']);
 
                         /* Add the selected node name to the slider text */
                         $('#selectedNode').html(jsonData['core']['data'][i]['text']);
@@ -611,9 +418,6 @@ $(function()
                     var toLoad = {};
 
                     item.types.forEach(function(type){
-                        /* get the total count of the IFC Entities */
-                        totObjects += type.count;
-
                         toLoad[type.name] = {mode: 0};
                         if(BIMSURFER.Constants.defaultTypes.indexOf(type.name) != -1) {
                         }
@@ -638,7 +442,6 @@ $(function()
                     viewer.loadGeometry(geometryLoader);
 
                     queryModel().done(function(){
-                        //console.log("loaded");
                         loadTheTree(ifcProject,nodeId,ifcProject.oid);
                     });
                 }
@@ -859,87 +662,6 @@ $(function()
         var promise = new Promise();
         buildTree(ifcProject,parent,ifcProject.oid);
         return promise;
-
-    }
-
-    function showPropertySet(propertySet) {
-        var finalDiv = $('#testingData');
-        var div = $('<div id="table"></div>');
-
-        div.append('<h3>'+propertySet.object.Name +'</h3>')
-
-        var table = $('<table class="table table-bordered table-striped dataTable tbl_info" style="width: 100%">');
-        var theader = $("<thead></thead>");
-        var tbody = $("<tbody> </tbody>");
-        var tr = $("<tr></tr>");
-        tr.attr("role","row");
-
-        var th1= ("<th>Property</th>");
-        var th2= ("<th>Value</th>");
-
-        tr.append(th1);
-        tr.append(th2);
-
-        theader.append(tr);
-        table.append(theader);
-
-        (function (propertySet) {
-            propertySet.getHasProperties(function(property){
-                if (property.object._t == "IfcPropertySingleValue") {
-                    var tr3 = $("<tr role=\"row\" class=\"odd\"></tr>");
-                    //tr.append("<td>" + property.object.Name + "</td>");
-                    var td3 = ("<td>" + property.object.Name + "</td>");
-                    property.getNominalValue(function(value){
-                        var v = value == null ? "" : value._v;
-                        var td4 = ("<td>" + v + "</td>");
-                        tr3.append(td3);
-                        tr3.append(td4);
-                        tbody.append(tr3);
-                    });
-                }
-            });
-        } )(propertySet);
-
-        table.append(tbody);
-        div.append(table);
-        finalDiv.append(div);
-    }
-
-
-
-    function nodeSelected(node) {
-        $("#object_info table tbody tr").remove();
-        $("#testingData").empty();
-
-        for(var i =0 ; i< ifcModel['data'].length ; i++){
-            if (node.id != null) {
-                ifcModel['data'][i].get(node.id, function(product){
-                    if(product != null){
-                        if (product.oid == node.id) {
-                            var tr = $("<tr></tr>");
-                            tr.append("<b>" + product.object._t + "</b>");
-                            if (product.object.Name != null) {
-                                tr.append("<b>" + product.object.Name + "</b>");
-                            }
-                            $("#object_info table tbody").append(tr);
-                            product.getIsDefinedBy(function(isDefinedBy){
-                                if (isDefinedBy.object._t == "IfcRelDefinesByProperties") {
-                                    isDefinedBy.getRelatingPropertyDefinition(function(propertySet){
-                                        if (propertySet.object._t == "IfcPropertySet") {
-                                            showPropertySet(propertySet);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    }
-                });
-
-            }
-        }
-
-
-
 
     }
 
